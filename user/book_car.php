@@ -85,7 +85,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                             </div>
                         </div>
                         <div class="text-center">
-                            <button type="submit" class="btn btn-primary btn-lg px-5">Book Now</button>
+                            <button type="submit" class="btn btn-primary">Book Now!</button>
+                            <a href="index.php" class="btn btn-secondary">Kembali</a>
                         </div>
                     </form>
                 </div>

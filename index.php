@@ -118,7 +118,7 @@
                     <img src="assets/img/bg2.jpeg" class="card-img-top" alt="Layanan 1">
                     <div class="card-body">
                         <h5 class="card-title">Beragam Pilihan Mobil</h5>
-                        <p class="card-text">Pilih dari berbagai macam mobil untuk setiap kebutuhan dan anggaran.</p>
+                        <p class="card-text">Pilih dari berbagai macam mobil untuk setiap kebutuhan.</p>
                     </div>
                 </div>
             </div>
@@ -127,7 +127,7 @@
                     <img src="assets/img/bg3.jpeg" class="card-img-top" alt="Layanan 2">
                     <div class="card-body">
                         <h5 class="card-title">Harga Terjangkau</h5>
-                        <p class="card-text">Kami menawarkan harga yang kompetitif untuk semua sewa mobil kami.</p>
+                        <p class="card-text">Menawarkan harga yang kompetitif untuk semua sewa mobil kami.</p>
                     </div>
                 </div>
             </div>
@@ -135,8 +135,8 @@
                 <div class="card">
                     <img src="assets/img/bg1.jpeg" class="card-img-top" alt="Layanan 3">
                     <div class="card-body">
-                        <h5 class="card-title">Dukungan Pelanggan 24/7</h5>
-                        <p class="card-text">Tim dukungan pelanggan kami siap membantu Anda kapan saja.</p>
+                        <h5 class="card-title">Dukungan Pelanggan</h5>
+                        <p class="card-text">Membantu pelanggan kapan dan dimana saja.</p>
                     </div>
                 </div>
             </div>
