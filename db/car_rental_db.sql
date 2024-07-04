@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Jun 26, 2024 at 08:53 PM
+-- Generation Time: Jul 04, 2024 at 03:56 PM
 -- Server version: 11.1.2-MariaDB
 -- PHP Version: 8.2.12
 
@@ -34,9 +34,17 @@ CREATE TABLE `bookings` (
   `start_date` date NOT NULL,
   `end_date` date NOT NULL,
   `total_price` decimal(10,2) NOT NULL,
-  `status` enum('pending','confirmed','canceled','completed') DEFAULT 'pending',
-  `created_at` timestamp NULL DEFAULT current_timestamp()
+  `created_at` timestamp NULL DEFAULT current_timestamp(),
+  `status` enum('pending','confirmed','canceled','completed') DEFAULT 'pending'
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+
+--
+-- Dumping data for table `bookings`
+--
+
+INSERT INTO `bookings` (`id`, `user_id`, `car_id`, `start_date`, `end_date`, `total_price`, `created_at`, `status`) VALUES
+(11, 7, 4, '2024-07-01', '2024-08-02', 3500000.00, '2024-07-04 10:59:44', 'confirmed'),
+(15, 7, 8, '2024-07-19', '2024-07-25', 360000.00, '2024-07-04 13:33:20', 'pending');
 
 -- --------------------------------------------------------
 
@@ -54,20 +62,17 @@ CREATE TABLE `cars` (
   `created_at` timestamp NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
 
--- --------------------------------------------------------
-
 --
--- Table structure for table `payments`
+-- Dumping data for table `cars`
 --
 
-CREATE TABLE `payments` (
-  `id` int(11) NOT NULL,
-  `booking_id` int(11) NOT NULL,
-  `payment_method` enum('credit_card','paypal','bank_transfer') NOT NULL,
-  `amount` decimal(10,2) NOT NULL,
-  `payment_status` enum('pending','completed','failed') DEFAULT 'pending',
-  `created_at` timestamp NULL DEFAULT current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+INSERT INTO `cars` (`id`, `model`, `brand`, `year`, `availability_status`, `price_per_day`, `created_at`) VALUES
+(4, 'Corolla', 'Toyota', '2020', 'available', 150000.00, '2024-06-28 07:08:58'),
+(5, 'Civic', 'Honda', '2019', 'available', 100000.00, '2024-06-28 07:09:21'),
+(6, 'Avanza', 'Toyota', '2020', 'available', 80000.00, '2024-06-28 07:10:00'),
+(7, 'Brio', 'Honda', '2019', 'available', 70000.00, '2024-06-28 07:10:47'),
+(8, 'Ertiga', 'Suzuki', '2018', 'available', 60000.00, '2024-06-28 07:11:17'),
+(10, 'Xpander', 'Mitsubishi ', '2017', 'available', 90000.00, '2024-07-04 12:27:45');
 
 -- --------------------------------------------------------
 
@@ -81,8 +86,17 @@ CREATE TABLE `users` (
   `email` varchar(100) NOT NULL,
   `password` varchar(255) NOT NULL,
   `role` enum('admin','customer') DEFAULT 'customer',
-  `created_at` timestamp NULL DEFAULT current_timestamp()
+  `created_at` timestamp NULL DEFAULT current_timestamp(),
+  `status` enum('active','blocked') DEFAULT 'active'
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+
+--
+-- Dumping data for table `users`
+--
+
+INSERT INTO `users` (`id`, `username`, `email`, `password`, `role`, `created_at`, `status`) VALUES
+(5, 'admin', 'admin@admin.com', '$2y$10$2oa5YtQbvUberc0QAzO1c.vSmRSDVLbkbhuZlUKzcnBZdBKUcfsG.', 'admin', '2024-07-03 05:02:36', 'active'),
+(7, 'Arif', 'arif@gmail.com', '$2y$10$6/FhkzxBmVUqhAnJVJOEEOkOqPPg.Am/nqJlmOWx6vJjc/tlMiPxG', 'customer', '2024-07-04 10:05:01', 'active');
 
 --
 -- Indexes for dumped tables
@@ -103,13 +117,6 @@ ALTER TABLE `cars`
   ADD PRIMARY KEY (`id`);
 
 --
--- Indexes for table `payments`
---
-ALTER TABLE `payments`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `booking_id` (`booking_id`);
-
---
 -- Indexes for table `users`
 --
 ALTER TABLE `users`
@@ -124,25 +131,19 @@ ALTER TABLE `users`
 -- AUTO_INCREMENT for table `bookings`
 --
 ALTER TABLE `bookings`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=17;
 
 --
 -- AUTO_INCREMENT for table `cars`
 --
 ALTER TABLE `cars`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `payments`
---
-ALTER TABLE `payments`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
 
 --
 -- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
 
 --
 -- Constraints for dumped tables
@@ -154,12 +155,6 @@ ALTER TABLE `users`
 ALTER TABLE `bookings`
   ADD CONSTRAINT `bookings_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`),
   ADD CONSTRAINT `bookings_ibfk_2` FOREIGN KEY (`car_id`) REFERENCES `cars` (`id`);
-
---
--- Constraints for table `payments`
---
-ALTER TABLE `payments`
-  ADD CONSTRAINT `payments_ibfk_1` FOREIGN KEY (`booking_id`) REFERENCES `bookings` (`id`);
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
