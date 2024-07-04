@@ -12,10 +12,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt->execute();
         $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
-        if ($user) {
-            // Verify password
-            if (password_verify($password, $user['password'])) {
-                // Password is correct, set session variables
+        if ($user && password_verify($password, $user['password'])) {
+            if ($user['status'] === 'blocked') {
+                echo "Akun telah diblokir";
+            } else {
                 $_SESSION['user_id'] = $user['id'];
                 $_SESSION['username'] = $user['username'];
                 $_SESSION['role'] = $user['role'];
@@ -26,14 +26,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     header('Location: ../user/index.php'); 
                 }
                 exit();
-            } else {
-                echo "<p>Invalid password. Please try again.</p>";
             }
         } else {
-            echo "<p>User not found. Please check your username/email.</p>";
+            echo "Invalid username & password.";
         }
-    } else {
-        echo "<p>Please fill in both fields.</p>";
     }
 }
 ?>

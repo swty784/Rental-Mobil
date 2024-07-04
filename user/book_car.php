@@ -3,130 +3,95 @@ include_once '../includes/header.php';
 include_once '../includes/auth.php';
 include_once '../includes/db.php';
 
-// Initialize variables
-$car_id = $start_date = $end_date = $total_price = "";
+$car_id = isset($_GET['car_id']) ? intval($_GET['car_id']) : null;
+$start_date = $end_date = $total_price = "";
 $car_id_err = $start_date_err = $end_date_err = $booking_err = $booking_success = "";
 
-// Fetch available cars from the database
+// Fetch the selected car
+$selected_car = null;
+if ($car_id) {
+    $sql = "SELECT id, model, brand, price_per_day FROM cars WHERE id = :car_id AND availability_status = 'available'";
+    $stmt = $conn->prepare($sql);
+    $stmt->bindParam(":car_id", $car_id, PDO::PARAM_INT);
+    $stmt->execute();
+    $selected_car = $stmt->fetch(PDO::FETCH_ASSOC);
+}
+
+// Fetch all available cars
 $sql = "SELECT id, model, brand, price_per_day FROM cars WHERE availability_status = 'available'";
-$cars = $conn->query($sql)->fetchAll();
+$cars = $conn->query($sql)->fetchAll(PDO::FETCH_ASSOC);
 
-// Process form data when form is submitted
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    // Validate car
-    if (empty(trim($_POST["car_id"]))) {
-        $car_id_err = "Please select a car.";
-    } else {
-        $car_id = trim($_POST["car_id"]);
-    }
+    $car_id = trim($_POST["car_id"]) ?: $car_id_err = "Pilih mobil.";
+    $start_date = trim($_POST["start_date"]) ?: $start_date_err = "Pilih tanggal mulai sewa.";
+    $end_date = trim($_POST["end_date"]) ?: $end_date_err = "Pilih tanggal akhir sewa.";
 
-    // Validate start date
-    if (empty(trim($_POST["start_date"]))) {
-        $start_date_err = "Please select a start date.";
-    } else {
-        $start_date = trim($_POST["start_date"]);
-    }
-
-    // Validate end date
-    if (empty(trim($_POST["end_date"]))) {
-        $end_date_err = "Please select an end date.";
-    } else {
-        $end_date = trim($_POST["end_date"]);
-    }
-
-    // Calculate total price
-    if (empty($car_id_err) && empty($start_date_err) && empty($end_date_err)) {
+    if (!$car_id_err && !$start_date_err && !$end_date_err) {
         $sql = "SELECT price_per_day FROM cars WHERE id = :car_id";
-        if ($stmt = $conn->prepare($sql)) {
+        $stmt = $conn->prepare($sql);
+        $stmt->bindParam(":car_id", $car_id, PDO::PARAM_INT);
+        $stmt->execute();
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if ($row) {
+            $price_per_day = $row["price_per_day"];
+            $interval = (new DateTime($start_date))->diff(new DateTime($end_date));
+            $total_price = $price_per_day * $interval->days;
+
+            $sql = "INSERT INTO bookings (user_id, car_id, start_date, end_date, total_price) VALUES (:user_id, :car_id, :start_date, :end_date, :total_price)";
+            $stmt = $conn->prepare($sql);
+            $stmt->bindParam(":user_id", $_SESSION["user_id"], PDO::PARAM_INT);
             $stmt->bindParam(":car_id", $car_id, PDO::PARAM_INT);
+            $stmt->bindParam(":start_date", $start_date, PDO::PARAM_STR);
+            $stmt->bindParam(":end_date", $end_date, PDO::PARAM_STR);
+            $stmt->bindParam(":total_price", $total_price, PDO::PARAM_STR);
+
             if ($stmt->execute()) {
-                if ($row = $stmt->fetch()) {
-                    $price_per_day = $row["price_per_day"];
-                    $start = new DateTime($start_date);
-                    $end = new DateTime($end_date);
-                    $interval = $start->diff($end);
-                    $total_price = $price_per_day * $interval->days;
-                }
-            }
-            unset($stmt);
-        }
-    }
-
-    // Check input errors before inserting in database
-    if (empty($car_id_err) && empty($start_date_err) && empty($end_date_err)) {
-        // Prepare an insert statement
-        $sql = "INSERT INTO bookings (user_id, car_id, start_date, end_date, total_price) VALUES (:user_id, :car_id, :start_date, :end_date, :total_price)";
-        
-        if ($stmt = $conn->prepare($sql)) {
-            // Bind variables to the prepared statement as parameters
-            $stmt->bindParam(":user_id", $param_user_id, PDO::PARAM_INT);
-            $stmt->bindParam(":car_id", $param_car_id, PDO::PARAM_INT);
-            $stmt->bindParam(":start_date", $param_start_date, PDO::PARAM_STR);
-            $stmt->bindParam(":end_date", $param_end_date, PDO::PARAM_STR);
-            $stmt->bindParam(":total_price", $param_total_price, PDO::PARAM_STR);
-
-            // Set parameters
-            $param_user_id = $_SESSION["user_id"];
-            $param_car_id = $car_id;
-            $param_start_date = $start_date;
-            $param_end_date = $end_date;
-            $param_total_price = $total_price;
-
-            // Attempt to execute the prepared statement
-            if ($stmt->execute()) {
-                $booking_success = "Car booked successfully.";
+                $booking_success = "Booking berhasil.";
             } else {
-                $booking_err = "Something went wrong. Please try again later.";
+                $booking_err = "Terjadi error.";
             }
-
-            // Close statement
-            unset($stmt);
+        } else {
+            $car_id_err = "Mobil tidak ditemukan.";
         }
     }
-
-    // Close connection
-    unset($conn);
 }
 ?>
 
 <div class="container mt-5">
-    <h2>Book a Car</h2>
-    <p>Fill in the details below to book a car.</p>
-    <?php
-    if (!empty($booking_success)) {
-        echo '<div class="alert alert-success">' . $booking_success . '</div>';
-    }
-    if (!empty($booking_err)) {
-        echo '<div class="alert alert-danger">' . $booking_err . '</div>';
-    }
-    ?>
-    <form action="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]); ?>" method="post">
-        <div class="form-group">
-            <label>Car</label>
-            <select name="car_id" class="form-control <?php echo (!empty($car_id_err)) ? 'is-invalid' : ''; ?>">
-                <option value="">Select a car</option>
-                <?php foreach ($cars as $car): ?>
-                    <option value="<?php echo $car['id']; ?>" <?php echo ($car['id'] == $car_id) ? 'selected' : ''; ?>>
-                        <?php echo htmlspecialchars($car['brand'] . ' ' . $car['model'] . ' - $' . $car['price_per_day'] . ' per day'); ?>
-                    </option>
-                <?php endforeach; ?>
-            </select>
-            <span class="invalid-feedback"><?php echo $car_id_err; ?></span>
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h2 class="card-title text-center mb-4">Booking Mobil</h2>
+                    <?php if ($booking_success): ?>
+                        <div class="alert alert-success text-center"><?= $booking_success ?></div>
+                    <?php endif; ?>
+                    <?php if ($booking_err): ?>
+                        <div class="alert alert-danger text-center"><?= $booking_err ?></div>
+                    <?php endif; ?>
+                    <form action="<?= htmlspecialchars($_SERVER["PHP_SELF"]) ?>" method="post">
+                        <input type="hidden" name="car_id" value="<?= $selected_car['id'] ?>">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="start_date" class="form-label">Start Date</label>
+                                <input type="date" id="start_date" name="start_date" class="form-control <?= $start_date_err ? 'is-invalid' : ''; ?>" value="<?= $start_date ?>">
+                                <?php if ($start_date_err): ?><div class="invalid-feedback"><?= $start_date_err ?></div><?php endif; ?>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="end_date" class="form-label">End Date</label>
+                                <input type="date" id="end_date" name="end_date" class="form-control <?= $end_date_err ? 'is-invalid' : ''; ?>" value="<?= $end_date ?>">
+                                <?php if ($end_date_err): ?><div class="invalid-feedback"><?= $end_date_err ?></div><?php endif; ?>
+                            </div>
+                        </div>
+                        <div class="text-center">
+                            <button type="submit" class="btn btn-primary btn-lg px-5">Book Now</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
         </div>
-        <div class="form-group">
-            <label>Start Date</label>
-            <input type="date" name="start_date" class="form-control <?php echo (!empty($start_date_err)) ? 'is-invalid' : ''; ?>" value="<?php echo $start_date; ?>">
-            <span class="invalid-feedback"><?php echo $start_date_err; ?></span>
-        </div>
-        <div class="form-group">
-            <label>End Date</label>
-            <input type="date" name="end_date" class="form-control <?php echo (!empty($end_date_err)) ? 'is-invalid' : ''; ?>" value="<?php echo $end_date; ?>">
-            <span class="invalid-feedback"><?php echo $end_date_err; ?></span>
-        </div>
-        <div class="form-group">
-            <input type="submit" class="btn btn-primary" value="Book Now">
-        </div>
-    </form>
+    </div>
 </div>
 
 <?php include_once '../includes/footer.php'; ?>

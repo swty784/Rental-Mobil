@@ -16,6 +16,7 @@
     <!-- Custom CSS -->
     <link href="assets/css/custom.css" rel="stylesheet">
     <link href="assets/css/style.css" rel="stylesheet">
+    
 </head>
 <body>
 <body>
@@ -47,9 +48,6 @@
                         <?php else: ?>
                             <li class="nav-item">
                                 <a class="nav-link" href="../user/login.php">Login</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link" href="../user/register.php">Register</a>
                             </li>
                             <li class="nav-item">
                                 <a class="nav-link" href="../includes/logout.php">Logout</a>
